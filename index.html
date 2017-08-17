@@ -1,10 +1,8 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
-
 <head>
   <meta charset="utf-8">
   <title>GUID验证器</title>
-  <script src="js/jquery.min.js"></script>
 </head>
 
 <body>
@@ -17,52 +15,50 @@
 	</div>
 </body>
 <script>
-var div_output = $("#div_output");
+var log=(function(div_output){
+	return function(s){
+		div_output.innerHTML+=s+"<br />";
+	};
+}(document.getElementById("div_output")));
 var file_string = "";
 function inputFiles(files) {
 	if (files.length) {
-		var file = files[0];
-		var reader = new FileReader();
-		reader.readAsText(file);
+		var file = files[0],
+			reader = new FileReader();
 		reader.onload = function() {
-			div_output.append("文件" + file.name + "载入成功<br /><br />");
+			log("文件" + file.name + "载入成功<br />");
 			file_string = this.result;
 		};
 		reader.onabort = function(){
-			div_output.append("文件" + file.name + "载入中断<br /><br />");
+			log("文件" + file.name + "载入中断<br />");
 		};
 		reader.onerror = function(){
-			div_output.append("文件" + file.name + "载入错误<br /><br />");
+			log("文件" + file.name + "载入错误<br />");
 		};
+		reader.readAsText(file);
 	}
 }
-
-var time_start = 0;
-var time_end = 0;
-var guid_patt=new RegExp(/\"\sGuid=\"[\d|a-f]{8}\-[\d|a-f]{4}\-[\d|a-f]{4}\-[\d|a-f]{4}\-[\d|a-f]{12}\"/g);
-var guid_array = new Array();
-var guid_array_length = 0;
-var temp_array = new Array();
-var temp_array_length = 0;
+var time_start = 0,
+	guid_patt = new RegExp("\"\sGuid=\"(d{32}|(\{\()?d{8}-d{4}-d{4}-d{4}-d{12}(\)\})?)\"".replace(/d/g,"[\d|a-f]"),"g"),
+	guid_array = new Array(),
+	guid_array_length = 0,
+	temp_array = new Array(),
+	temp_array_length = 0;
 function analize(){
 	time_start = new Date().getTime();
 	temp_array = new Array();
 	guid_array = file_string.match(guid_patt);
 	guid_array_length = (guid_array==null)?0:guid_array.length;
-	for(var i = 0; i < guid_array_length; i++){
+	var i;
+	for(i = 0; i < guid_array_length; i++){
 		if (guid_array.lastIndexOf(guid_array[i]) != i)temp_array.push(guid_array[i]);
 	}
 	temp_array_length = temp_array.length;
-	if(temp_array_length == 0)div_output.append("没有重复的Guid<br />");
-	else {
-		div_output.append("有" + temp_array_length + "个重复的Guid<br />");
-		for(var i = 0; i < temp_array_length; i++){
-			div_output.append(temp_array[i].replace("\" ","")+"<br />");
-		}
+	log(temp_array_length ? ("有" + temp_array_length + "个重复的Guid") : "没有重复的Guid");
+	for(i = 0; i < temp_array_length; i++){
+		log(temp_array[i].replace("\" ",""));
 	}
-	time_end = new Date().getTime();
-	div_output.append("本次操作耗时" + (time_end - time_start) + "毫秒<br />");
-	div_output.append("<br />");
+	log("本次操作耗时" + (new Date().getTime() - time_start) + "毫秒<br />");
 }
 </script>
 </html>
