@@ -39,7 +39,7 @@ function inputFiles(files) {
 	}
 }
 var time_start = 0,
-	guid_patt = new RegExp("\"\sGuid=\"(d{32}|(\{\()?d{8}-d{4}-d{4}-d{4}-d{12}(\)\})?)\"".replace(/d/g,"[\d|a-f]"),"g"),
+	guid_patt = new RegExp("\"\\sGuid=\"(d{32}|(\{\()?d{8}-d{4}-d{4}-d{4}-d{12}(\)\})?)\"".replace(/d\{/g,"[\d|a-f]{"),"g"),
 	guid_array = new Array(),
 	guid_array_length = 0,
 	temp_array = new Array(),
