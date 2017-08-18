@@ -39,7 +39,7 @@ function inputFiles(files) {
 	}
 }
 var time_start = 0,
-	guid_patt = new RegExp("\"\\sGuid=\"(d{32}|(\\{\\()?d{8}-d{4}-d{4}-d{4}-d{12}(\\)\\})?)\"".replace(/d\{/g,"[\d|a-f]{"),"g"),
+	guid_patt = /"\sGuid="([\d|a-f]{32}|(\{\()?[\d|a-f]{8}-[\d|a-f]{4}-[\d|a-f]{4}-[\d|a-f]{4}-[\d|a-f]{12}(\)\})?)"/g,
 	guid_array = new Array(),
 	guid_array_length = 0,
 	temp_array = new Array(),
@@ -48,7 +48,7 @@ function analize(){
 	time_start = new Date().getTime();
 	temp_array = new Array();
 	guid_array = file_string.match(guid_patt);
-	guid_array_length = (guid_array==null)?0:guid_array.length;
+	guid_array_length = guid_array == null ? 0 : guid_array.length;
 	var i;
 	for(i = 0; i < guid_array_length; i++){
 		if (guid_array.lastIndexOf(guid_array[i]) != i)temp_array.push(guid_array[i]);
