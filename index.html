@@ -8,7 +8,7 @@
 <body>
 	<div>
 		<input type="file" id="file" onchange="inputFiles(this.files)" />
-		<button type="button" onclick="analize();">开始解析</button>
+		<button onclick="analize();">开始解析</button>
 	</div>
 	<div id="div_output">
 		
@@ -19,8 +19,9 @@ var log=(function(div_output){
 	return function(s){
 		div_output.innerHTML+=s+"<br />";
 	};
-}(document.getElementById("div_output")));
-var file_string = "";
+}(document.getElementById("div_output"))),
+	file_string = "",
+	guid_patt = /"\sGuid="(\{\()?[\d|a-f]{8}-[\d|a-f]{4}-[\d|a-f]{4}-[\d|a-f]{4}-[\d|a-f]{12}(\)\})?"/g;
 function inputFiles(files) {
 	if (files.length) {
 		var file = files[0],
@@ -38,26 +39,16 @@ function inputFiles(files) {
 		reader.readAsText(file);
 	}
 }
-var time_start = 0,
-	guid_patt = /"\sGuid="([\d|a-f]{32}|(\{\()?[\d|a-f]{8}-[\d|a-f]{4}-[\d|a-f]{4}-[\d|a-f]{4}-[\d|a-f]{12}(\)\})?)"/g,
-	guid_array = new Array(),
-	guid_array_length = 0,
-	temp_array = new Array(),
-	temp_array_length = 0;
 function analize(){
-	time_start = new Date().getTime();
-	temp_array = new Array();
-	guid_array = file_string.match(guid_patt);
-	guid_array_length = guid_array == null ? 0 : guid_array.length;
-	var i;
-	for(i = 0; i < guid_array_length; i++){
-		if (guid_array.lastIndexOf(guid_array[i]) != i)temp_array.push(guid_array[i]);
-	}
-	temp_array_length = temp_array.length;
-	log(temp_array_length ? ("有" + temp_array_length + "个重复的Guid") : "没有重复的Guid");
-	for(i = 0; i < temp_array_length; i++){
-		log(temp_array[i].replace("\" ",""));
-	}
+	var time_start = new Date().getTime(), n = {}, result = [];
+	(file_string.match(guid_patt)||[]).concat(file_string.match(/"\sGuid="[\d|a-f]{32}"/g)||[])
+	.forEach(function(val, i, arr){
+			var guid = (val = val.slice(8, -1)).replace(/-/g,"");
+			if(!n[guid]) n[guid] = true;
+			else result.push(val);
+		});
+	log(result.length ? "有" + result.length + "个重复的Guid" : "没有重复的Guid");
+	result.forEach(log);
 	log("本次操作耗时" + (new Date().getTime() - time_start) + "毫秒<br />");
 }
 </script>
