@@ -1,56 +1,85 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>GUID验证器</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+	<title>GUID验证器</title>
 </head>
-
 <body>
 	<div>
 		<input type="file" id="file" onchange="inputFiles(this.files)" />
+		<label><input type="checkbox" id="minimize" />使用最简Guid</label>
 		<button type="button" onclick="analize();">开始解析</button>
+		<button type="button" onclick="clearDuplicate();">去除重复的Guid</button>
 	</div>
-	<div id="div_output">
-		
-	</div>
+	<pre id="output">
+	</pre>
 </body>
 <script>
-var log=(function(div_output){
-	return function(s){
-		div_output.innerHTML+=s+"<br />";
-	};
-}(document.getElementById("div_output"))),
+var output = document.getElementById("output"),
+	min = document.getElementById("minimize"),
+	log = function(s) { output.innerHTML += s + "\n"; },
 	file_string = "",
-	guid_patt = /"\sGuid="(\{\()?[\d|a-f]{8}-[\d|a-f]{4}-[\d|a-f]{4}-[\d|a-f]{4}-[\d|a-f]{12}(\)\})?"/g;
+	guid_patt = /"\sGuid="((\{\()?[\d|a-f]{8}-[\d|a-f]{4}-[\d|a-f]{4}-[\d|a-f]{4}-[\d|a-f]{12}(\)\})?)"/g,
+	guid_patt2 = /"\sGuid="([\d|a-f]{32})"/g;
 function inputFiles(files) {
-	if (files.length) {
-		var file = files[0],
+	for (var i = 0; i < files.length; i++) {
+		var file = files[i],
 			reader = new FileReader();
 		reader.onload = function() {
-			log("文件" + file.name + "载入成功<br />");
-			file_string = this.result;
+			log("文件" + file.name + "载入成功\n");
+			file_string += this.result;
 		};
 		reader.onabort = function(){
-			log("文件" + file.name + "载入中断<br />");
+			log("文件" + file.name + "载入中断\n");
 		};
 		reader.onerror = function(){
-			log("文件" + file.name + "载入错误<br />");
+			log("文件" + file.name + "载入错误\n");
 		};
 		reader.readAsText(file);
 	}
 }
 function analize(){
 	var time_start = new Date().getTime(), n = {}, result = [];
-	(file_string.match(guid_patt)||[]).concat(file_string.match(/"\sGuid="[\d|a-f]{32}"/g)||[])
+	(file_string.match(guid_patt)||[]).concat(file_string.match(guid_patt2)||[])
 	.forEach(function(val, i, arr){
 			var guid = (val = val.slice(8, -1)).replace(/-/g,"");
 			if(!n[guid]) n[guid] = true;
 			else result.push(val);
 		});
-	log(result.length ? "有" + result.length + "个重复的Guid" : "没有重复的Guid");
+	log((result.length ? "有" + result.length + "个" : "没有") + "重复的Guid");
 	result.forEach(log);
-	log("本次操作耗时" + (new Date().getTime() - time_start) + "毫秒<br />");
+	log("本次操作耗时" + (new Date().getTime() - time_start) + "毫秒\n");
+}
+function clearDuplicate(){
+	function generateGuid(c){
+		var r = Math.random()*16|0;
+		return (c == 'x' ? r : (r&3|8)).toString(16);
+	}
+	var time_start = new Date().getTime(), n = {}, count = 0,
+	rep_patt = min.checked ? "xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx" : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
+	file_string = file_string.replace(guid_patt, function(a, guid){
+		var newguid = guid.replace(/-/g,"");
+		if(!n[newguid]){
+			n[newguid] = true;
+			return a;
+		}
+		newguid = rep_patt.replace(/[xy]/g, generateGuid);
+		count++;
+		log("已将" + guid + "替换成" + newguid);
+		return " Guid=\"" + newguid + '"';
+	}).replace(guid_patt2, function(a, guid){
+		if(!n[guid]){
+			n[guid] = true;
+			return a;
+		}
+		var newguid = "xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx".replace(/[xy]/g, generateGuid);
+		count++;
+		log("已将" + guid + "替换成" + newguid);
+		return " Guid=\"" + newguid + '"';
+	});
+	log((count ? "共去除" + count + "个" : "没有") + "重复的Guid");
+	log("本次操作耗时" + (new Date().getTime() - time_start) + "毫秒\n");
 }
 </script>
 </html>
